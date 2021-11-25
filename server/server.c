@@ -1,4 +1,6 @@
+#include <arpa/inet.h>
 #include <ctype.h>
+#include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -7,6 +9,18 @@
 #include <unistd.h>
 
 #include "types.h"
+
+void *recvsocket(void *args)
+{
+    puts("recvev");
+    return NULL;
+}
+
+void *sendsocket(void *args)
+{
+    puts("send");
+    return NULL;
+}
 
 int main(int argc, char **argv)
 {
@@ -33,5 +47,55 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    return 0;
+    // init socket
+    int port = atoi(server_port);
+    int st = socket(AF_INET, SOCK_STREAM, 0);
+    int on = 1;
+    if (setsockopt(st, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
+    {
+        printf("init socket failed, %s\n", strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    // define an ip address struct
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;                // define addr to TCP/IP
+    addr.sin_port = htons(port);              // convert local byte order to network byte order
+    addr.sin_addr.s_addr = htonl(INADDR_ANY); // all adress on this host
+
+    // bind ip to the server
+    if (bind(st, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+    {
+        printf("bind socket failed %s\n", strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    // server start listen
+    if (listen(st, 20) == -1)
+    {
+        printf("listen failed %s\n", strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    int client_st = 0; // socket client
+    struct sockaddr_in client_addr;
+
+    while (1)
+    {
+        memset(&client_addr, 0, sizeof(client_addr));
+        socklen_t len = sizeof(client_addr);
+
+        // accept will block until client connect
+        client_st = accept(st, (struct sockaddr *)&client_addr, &len);
+        if (client_st == -1)
+        {
+            printf("accept failed %s\n", strerror(errno));
+            return EXIT_FAILURE;
+        }
+        printf("accepted %s\n", inet_ntoa(client_addr.sin_addr));
+    }
+
+    close(st);
+    return EXIT_SUCCESS;
 }
