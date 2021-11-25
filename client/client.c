@@ -1,4 +1,6 @@
+#include <arpa/inet.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +41,25 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Error!, No port number provided!\n");
         exit(1);
+    }
+
+    // init socket
+    int port = atoi(server_port);
+    int host = atoi(server_host_name);
+    int st = socket(AF_INET, SOCK_STREAM, 0);
+
+    // define an ip address struct
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;          // define addr to TCP/IP
+    addr.sin_port = htons(port);        // convert local byte order to network byte order
+    addr.sin_addr.s_addr = htonl(host); // all adress on this host
+
+    // use connect to connect the ip address and port which addr define
+    if (connect(st, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+    {
+        printf("connect failed %s\n", strerror(errno));
+        return EXIT_FAILURE;
     }
 
     return 0;
