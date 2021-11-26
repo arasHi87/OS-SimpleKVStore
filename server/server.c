@@ -9,16 +9,28 @@
 #include <unistd.h>
 
 #include "types.h"
+#define maxN 1024
+
+typedef struct
+{
+    int st;
+    char *str;
+} response;
 
 void *recvsocket(void *args)
 {
-    puts("recvev");
-    return NULL;
-}
-
-void *sendsocket(void *args)
-{
-    puts("send");
+    int st = *(int *)args;
+    char str[maxN];
+    while (recv(st, str, sizeof(str), 0) > 0)
+    {
+        if (strlen(str))
+        {
+            printf("recv: %s\n", str);
+            send(st, str, strlen(str), 0);
+            printf("send: %s\n", str);
+        }
+        memset(str, 0, sizeof(str));
+    }
     return NULL;
 }
 
@@ -81,6 +93,7 @@ int main(int argc, char **argv)
     int client_st = 0; // socket client
     struct sockaddr_in client_addr;
 
+    pthread_t thrd;
     while (1)
     {
         memset(&client_addr, 0, sizeof(client_addr));
@@ -94,6 +107,9 @@ int main(int argc, char **argv)
             return EXIT_FAILURE;
         }
         printf("accepted %s\n", inet_ntoa(client_addr.sin_addr));
+
+        pthread_create(&thrd, NULL, recvsocket, &client_st);
+        pthread_detach(thrd);
     }
 
     close(st);
