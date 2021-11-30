@@ -1,3 +1,6 @@
+#include "format.h"
+#include "treap.h"
+#include "types.h"
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
@@ -7,15 +10,51 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "types.h"
 #define maxN 1024
 
-typedef struct
+Node *map = NULL, *tmp;
+
+char *deal_req(char *input)
 {
-    int st;
-    char *str;
-} response;
+    char *cmd = strtok(input, " "), key[maxN], val[maxN];
+    char *resp = (char *)malloc(sizeof(char) * maxN);
+
+    if (!strcmp(cmd, "SET"))
+    {
+        strcpy(key, strtok(NULL, " "));
+        strcpy(val, strtok(NULL, " "));
+        if (find(map, key))
+            sprintf(resp, "key %s already exist", key);
+        else
+        {
+            map = insert(map, key, val);
+            sprintf(resp, "key value pair (%s, %s) is stored!", key, val);
+        }
+    }
+    else if (!strcmp(cmd, "GET"))
+    {
+        tmp = find(map, strtok(NULL, " "));
+        if (tmp)
+            sprintf(resp, "the value of %s is %s", tmp->key, tmp->val);
+        else
+            sprintf(resp, "the key is not exist!");
+    }
+    else if (!strcmp(cmd, "DEL"))
+    {
+        strcpy(key, strtok(NULL, " "));
+        tmp = find(map, key);
+        if (!tmp)
+            sprintf(resp, "the key is not exist!");
+        else
+        {
+            map = destroy(map, key);
+            sprintf(resp, "key %s is removed", key);
+        }
+    }
+    else
+        sprintf(resp, "command not found, please cheack again");
+    return resp;
+}
 
 void *recvsocket(void *args)
 {
@@ -25,9 +64,11 @@ void *recvsocket(void *args)
     {
         if (strlen(str))
         {
+            trim(str);
             printf("recv: %s\n", str);
-            send(st, str, strlen(str), 0);
-            printf("send: %s\n", str);
+            char *result = deal_req(str);
+            send(st, result, strlen(result), 0);
+            printf("send: %s\n", result);
         }
         memset(str, 0, sizeof(str));
     }
