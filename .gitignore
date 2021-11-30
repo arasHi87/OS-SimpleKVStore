@@ -1,2 +1,4 @@
 /build/
 /race_demo/
+.vscode
+.out
