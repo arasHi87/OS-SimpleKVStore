@@ -10,14 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define maxN 1024
 
 Node *map = NULL, *tmp;
 
 char *deal_req(char *input)
 {
-    char *cmd = strtok(input, " "), key[maxN], val[maxN];
-    char *resp = (char *)malloc(sizeof(char) * maxN);
+    char *cmd = strtok(input, " "), key[MAX_LEN], val[MAX_LEN];
+    char *resp = (char *)malloc(sizeof(char) * MAX_LEN);
 
     if (!strcmp(cmd, "SET"))
     {
@@ -59,7 +58,7 @@ char *deal_req(char *input)
 void *recvsocket(void *args)
 {
     int st = *(int *)args;
-    char str[maxN];
+    char str[MAX_LEN];
     while (recv(st, str, sizeof(str), 0) > 0)
     {
         if (strlen(str))
