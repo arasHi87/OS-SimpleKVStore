@@ -1,3 +1,4 @@
+#include "sock.h"
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
@@ -71,30 +72,14 @@ int main(int argc, char **argv)
     }
 
     // init socket
-    int port = atoi(server_port);
-    int host = atoi(server_host_name);
-    int st = socket(AF_INET, SOCK_STREAM, 0);
-
-    // define an ip address struct
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;          // define addr to TCP/IP
-    addr.sin_port = htons(port);        // convert local byte order to network byte order
-    addr.sin_addr.s_addr = htonl(host); // all adress on this host
-
-    // use connect to connect the ip address and port which addr define
-    if (connect(st, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-    {
-        printf("connect failed %s\n", strerror(errno));
-        return EXIT_FAILURE;
-    }
+    int skt = clientfd(atoi(server_host_name), atoi(server_port));
 
     // recv response and send data to server
     pthread_t thrd1, thrd2;
-    pthread_create(&thrd1, NULL, recvsocket, &st);
-    pthread_create(&thrd2, NULL, sendsocket, &st);
+    pthread_create(&thrd1, NULL, recvsocket, &skt);
+    pthread_create(&thrd2, NULL, sendsocket, &skt);
     pthread_join(thrd1, NULL);
-    close(st);
+    close(skt);
 
     return 0;
 }

@@ -1,10 +1,10 @@
 #include "format.h"
+#include "sock.h"
 #include "treap.h"
 #include "types.h"
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
-#include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,38 +99,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    // init socket
-    int port = atoi(server_port);
-    int st = socket(AF_INET, SOCK_STREAM, 0);
-    int on = 1;
-    if (setsockopt(st, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
-    {
-        printf("init socket failed, %s\n", strerror(errno));
-        return EXIT_FAILURE;
-    }
-
-    // define an ip address struct
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;                // define addr to TCP/IP
-    addr.sin_port = htons(port);              // convert local byte order to network byte order
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); // all adress on this host
-
-    // bind ip to the server
-    if (bind(st, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-    {
-        printf("bind socket failed %s\n", strerror(errno));
-        return EXIT_FAILURE;
-    }
-
-    // server start listen
-    if (listen(st, 20) == -1)
-    {
-        printf("listen failed %s\n", strerror(errno));
-        return EXIT_FAILURE;
-    }
-
-    int client_st = 0; // socket client
+    int skt = listenfd(atoi(server_port)); // init server socket
+    int client_skt = 0;                    // socket client
     struct sockaddr_in client_addr;
 
     pthread_t thrd;
@@ -140,18 +110,18 @@ int main(int argc, char **argv)
         socklen_t len = sizeof(client_addr);
 
         // accept will block until client connect
-        client_st = accept(st, (struct sockaddr *)&client_addr, &len);
-        if (client_st == -1)
+        client_skt = accept(skt, (struct sockaddr *)&client_addr, &len);
+        if (client_skt == -1)
         {
             printf("accept failed %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
         printf("accepted %s\n", inet_ntoa(client_addr.sin_addr));
 
-        pthread_create(&thrd, NULL, recvsocket, &client_st);
+        pthread_create(&thrd, NULL, recvsocket, &client_skt);
         pthread_detach(thrd);
     }
 
-    close(st);
+    close(skt);
     return EXIT_SUCCESS;
 }
