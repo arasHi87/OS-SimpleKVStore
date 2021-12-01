@@ -1,4 +1,5 @@
 #include "format.h"
+#include "log.h"
 #include "sock.h"
 #include "treap.h"
 #include "types.h"
@@ -64,10 +65,10 @@ void *recvsocket(void *args)
         if (strlen(str))
         {
             trim(str);
-            printf("recv: %s\n", str);
+            log_info("recv: %s\n", str);
             char *result = deal_req(str);
             send(st, result, strlen(result), 0);
-            printf("send: %s\n", result);
+            log_info("send: %s\n", result);
         }
         memset(str, 0, sizeof(str));
     }
@@ -88,15 +89,15 @@ int main(int argc, char **argv)
             strncpy(server_port, optarg, strlen(optarg));
             break;
         case '?':
-            fprintf(stderr, "Unknown option \"-%c\"\n", isprint(optopt) ? optopt : '#');
+            log_error("Unknown option \"-%c\"\n", isprint(optopt) ? optopt : '#');
             return 0;
         }
     }
 
     if (!server_port)
     {
-        fprintf(stderr, "Error! No port number provided!\n");
-        exit(1);
+        log_error("Error! No port number provided!");
+        return EXIT_FAILURE;
     }
 
     int skt = listenfd(atoi(server_port)); // init server socket
@@ -113,10 +114,10 @@ int main(int argc, char **argv)
         client_skt = accept(skt, (struct sockaddr *)&client_addr, &len);
         if (client_skt == -1)
         {
-            printf("accept failed %s\n", strerror(errno));
+            log_error("accept failed %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
-        printf("accepted %s\n", inet_ntoa(client_addr.sin_addr));
+        log_info("accepeted %s:%d", inet_ntoa(client_addr.sin_addr), client_addr.sin_port);
 
         pthread_create(&thrd, NULL, recvsocket, &client_skt);
         pthread_detach(thrd);

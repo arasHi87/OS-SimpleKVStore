@@ -1,3 +1,5 @@
+#include "format.h"
+#include "log.h"
 #include "sock.h"
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -16,7 +18,7 @@ void *recvsocket(void *args)
     char str[maxN];
     while (recv(st, str, sizeof(str), 0) > 0)
     {
-        printf("recv: %s\n", str);
+        log_info("recv: %s\n", str);
         memset(str, 0, sizeof(str));
     }
     return NULL;
@@ -28,7 +30,8 @@ void *sendsocket(void *args)
     char str[maxN];
     while (~read(STDIN_FILENO, str, sizeof(str)))
     {
-        printf("send: %s\n", str);
+        trim(str);
+        log_info("send: %s", str);
         send(st, str, sizeof(str), 0);
         memset(str, 0, sizeof(str));
     }
@@ -54,20 +57,20 @@ int main(int argc, char **argv)
             strncpy(server_port, optarg, strlen(optarg));
             break;
         case '?':
-            fprintf(stderr, "Unknown option \"-%c\"\n", isprint(optopt) ? optopt : '#');
+            log_error("Unknown option \"-%c\"\n", isprint(optopt) ? optopt : '#');
             return 0;
         }
     }
 
     if (!server_host_name)
     {
-        fprintf(stderr, "Error!, No host name provided!\n");
+        log_error("Error!, No host name provided!\n");
         exit(1);
     }
 
     if (!server_port)
     {
-        fprintf(stderr, "Error!, No port number provided!\n");
+        log_error("Error!, No port number provided!\n");
         exit(1);
     }
 
