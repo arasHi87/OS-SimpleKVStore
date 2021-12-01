@@ -1,17 +1,7 @@
-#include <string.h>
+#ifndef _FORMAT_H_
+#define _FORMAT_H_
 
-int ischar(char ch)
-{
-    return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'));
-}
+int ischar(char ch);
+void trim(char *str);
 
-void trim(char *s)
-{
-    char *p = s;
-    int l = strlen(p);
-    while (!ischar(p[l - 1]))
-        p[--l] = 0;
-    while (*p && !ischar(*p))
-        ++p, --l;
-    memmove(s, p, l + 1);
-}
+#endif
