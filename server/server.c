@@ -16,40 +16,50 @@ Node *map = NULL, *tmp;
 
 char *deal_req(char *input)
 {
-    char *cmd = strtok(input, " "), key[MAX_LEN], val[MAX_LEN];
+    char cmd[MAX_LEN], key[MAX_LEN], val[MAX_LEN];
     char *resp = (char *)malloc(sizeof(char) * MAX_LEN);
 
-    if (!strcmp(cmd, "SET"))
+    if (!strncmp(input, "SET", 2))
     {
-        strcpy(key, strtok(NULL, " "));
-        strcpy(val, strtok(NULL, " "));
-        if (find(map, key))
-            sprintf(resp, "key %s already exist", key);
+        if (sscanf(input, "%s %s %s", cmd, key, val) != 2)
+            if (find(map, key))
+                sprintf(resp, "key %s already exist", key);
+            else
+            {
+                map = insert(map, key, val);
+                sprintf(resp, "key value pair (%s, %s) is stored!", key, val);
+            }
         else
-        {
-            map = insert(map, key, val);
-            sprintf(resp, "key value pair (%s, %s) is stored!", key, val);
-        }
+            sprintf(resp, "command format error, please check again");
     }
-    else if (!strcmp(cmd, "GET"))
+    else if (!strncmp(input, "GET", 2))
     {
-        tmp = find(map, strtok(NULL, " "));
-        if (tmp)
-            sprintf(resp, "the value of %s is %s", tmp->key, tmp->val);
-        else
-            sprintf(resp, "the key is not exist!");
-    }
-    else if (!strcmp(cmd, "DEL"))
-    {
-        strcpy(key, strtok(NULL, " "));
-        tmp = find(map, key);
-        if (!tmp)
-            sprintf(resp, "the key is not exist!");
-        else
+        if (sscanf(input, "%s %s", cmd, key) != 1)
         {
-            map = destroy(map, key);
-            sprintf(resp, "key %s is removed", key);
+            tmp = find(map, key);
+            if (tmp)
+                sprintf(resp, "the value of %s is %s", tmp->key, tmp->val);
+            else
+                sprintf(resp, "the key is not exist!");
         }
+        else
+            sprintf(resp, "command format error, please check again");
+    }
+    else if (!strncmp(input, "DEL", 2))
+    {
+        if (sscanf(input, "%s %s", cmd, key) != 1)
+        {
+            tmp = find(map, key);
+            if (!tmp)
+                sprintf(resp, "the key is not exist!");
+            else
+            {
+                map = destroy(map, key);
+                sprintf(resp, "key %s is removed", key);
+            }
+        }
+        else
+            sprintf(resp, "command format error, please check again");
     }
     else
         sprintf(resp, "command not found, please cheack again");
@@ -65,10 +75,10 @@ void *recvsocket(void *args)
         if (strlen(str))
         {
             trim(str);
-            log_info("recv: %s\n", str);
+            log_info("recv: %s", str);
             char *result = deal_req(str);
             send(st, result, strlen(result), 0);
-            log_info("send: %s\n", result);
+            log_info("send: %s", result);
         }
         memset(str, 0, sizeof(str));
     }
