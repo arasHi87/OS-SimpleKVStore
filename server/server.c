@@ -13,9 +13,11 @@
 #include <unistd.h>
 
 Node *map = NULL, *tmp;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 char *deal_req(char *input)
 {
+    pthread_mutex_lock(&mutex);
     char cmd[MAX_LEN], key[MAX_LEN], val[MAX_LEN];
     char *resp = (char *)malloc(sizeof(char) * MAX_LEN);
 
@@ -63,6 +65,7 @@ char *deal_req(char *input)
     }
     else
         sprintf(resp, "command not found, please cheack again");
+    pthread_mutex_unlock(&mutex);
     return resp;
 }
 
