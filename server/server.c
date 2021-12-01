@@ -2,7 +2,6 @@
 #include "log.h"
 #include "sock.h"
 #include "treap.h"
-#include "types.h"
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
