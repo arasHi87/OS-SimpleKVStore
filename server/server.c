@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <pthread.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,12 +18,12 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 char *deal_req(char *input)
 {
     pthread_mutex_lock(&mutex);
-    char cmd[MAX_LEN], key[MAX_LEN], val[MAX_LEN];
+    char cmd[MAX_LEN], key[MAX_LEN], val[MAX_LEN], chk[MAX_LEN];
     char *resp = (char *)malloc(sizeof(char) * MAX_LEN);
 
     if (!strncmp(input, "SET", 2))
     {
-        if (sscanf(input, "%s %s %s", cmd, key, val) != 2)
+        if (sscanf(input, "%s %s %s %s", cmd, key, val, chk) == 3)
             if (find(map, key))
                 sprintf(resp, "key %s already exist", key);
             else
@@ -35,7 +36,7 @@ char *deal_req(char *input)
     }
     else if (!strncmp(input, "GET", 2))
     {
-        if (sscanf(input, "%s %s", cmd, key) != 1)
+        if (sscanf(input, "%s %s %s", cmd, key, chk) == 2)
         {
             tmp = find(map, key);
             if (tmp)
@@ -48,7 +49,7 @@ char *deal_req(char *input)
     }
     else if (!strncmp(input, "DEL", 2))
     {
-        if (sscanf(input, "%s %s", cmd, key) != 1)
+        if (sscanf(input, "%s %s %s", cmd, key, chk) == 2)
         {
             tmp = find(map, key);
             if (!tmp)
