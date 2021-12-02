@@ -2,6 +2,8 @@ SERVER_DIR := server
 CLIENT_DIR := client
 UTIL_DIR := util
 BUILD_DIR ?= build
+SERVER_PORT = 8787
+SERVER_HOST = localhost
 
 SERVER_TARGET := ${BUILD_DIR}/server
 CLIENT_TARGET := ${BUILD_DIR}/client
@@ -29,6 +31,12 @@ ${SERVER_TARGET}: ${SERVER_SOURCES}
 
 ${CLIENT_TARGET}: ${CLIENT_SOURCES}
 	$(CC) -o $@ ${CLIENT_SOURCES} ${UTIL_SOURCES} ${CFLAGS}
+
+server_up:
+	./${SERVER_TARGET} -p ${SERVER_PORT}
+
+client_up:
+	./${CLIENT_TARGET} -h ${SERVER_HOST} -p ${SERVER_PORT}
 
 clean:
 	${RM} -r ${BUILD_DIR}
